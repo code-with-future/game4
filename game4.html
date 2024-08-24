@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+      }
+      canvas {
+        border: 2px solid #333;
+        background-color: #000;
+      }
+      .score {
+        position: absolute;
+        top: 20px;
+        font-size: 24px;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="score" id="score">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      let gridSize = 20; // Size of each grid tile
+      let tileCount; // Number of tiles on the canvas
+      let snake = [{ x: 160, y: 160 }]; // Initial position of the snake
+      let snakeDirection = { x: gridSize, y: 0 }; // Direction of the snake's movement (initially moving right)
+      let food = { x: 100, y: 100 }; // Initial position of the food
+      let score = 0;
+      let gameInterval;
+
+      function resizeCanvas() {
+        // Set canvas size to be responsive
+        canvas.width = window.innerWidth * 0.8;
+        canvas.height = window.innerHeight * 0.8;
+        tileCount = Math.floor(canvas.width / gridSize); // Update tile count based on canvas size
+
+        // Make sure the snake and food are within bounds after resizing
+        snake.forEach((segment) => {
+          segment.x = Math.floor(segment.x / gridSize) * gridSize;
+          segment.y = Math.floor(segment.y / gridSize) * gridSize;
+        });
+        food.x = Math.floor(food.x / gridSize) * gridSize;
+        food.y = Math.floor(food.y / gridSize) * gridSize;
+      }
+
+      function startGame() {
+        resizeCanvas();
+        document.addEventListener("keydown", changeDirection);
+        gameInterval = setInterval(updateGame, 100);
+        window.addEventListener("resize", resizeCanvas);
+      }
+
+      function updateGame() {
+        moveSnake();
+        if (checkCollision()) {
+          clearInterval(gameInterval);
+          document.removeEventListener("keydown", changeDirection);
+          alert("Game Over! Your score was " + score);
+          return;
+        }
+        if (snake[0].x === food.x && snake[0].y === food.y) {
+          score++;
+          document.getElementById("score").textContent = "Score: " + score;
+          snake.push({ ...snake[snake.length - 1] });
+          placeFood();
+        }
+        drawGame();
+      }
+
+      function moveSnake() {
+        const head = {
+          x: snake[0].x + snakeDirection.x,
+          y: snake[0].y + snakeDirection.y,
+        };
+        snake.unshift(head);
+        snake.pop();
+      }
+
+      function checkCollision() {
+        const head = snake[0];
+        // Check wall collision
+        if (
+          head.x < 0 ||
+          head.x >= canvas.width ||
+          head.y < 0 ||
+          head.y >= canvas.height
+        ) {
+          return true;
+        }
+        // Check self collision
+        for (let i = 1; i < snake.length; i++) {
+          if (head.x === snake[i].x && head.y === snake[i].y) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function changeDirection(event) {
+        switch (event.keyCode) {
+          case 37: // Left arrow
+            if (snakeDirection.x === 0) {
+              snakeDirection = { x: -gridSize, y: 0 };
+            }
+            break;
+          case 38: // Up arrow
+            if (snakeDirection.y === 0) {
+              snakeDirection = { x: 0, y: -gridSize };
+            }
+            break;
+          case 39: // Right arrow
+            if (snakeDirection.x === 0) {
+              snakeDirection = { x: gridSize, y: 0 };
+            }
+            break;
+          case 40: // Down arrow
+            if (snakeDirection.y === 0) {
+              snakeDirection = { x: 0, y: gridSize };
+            }
+            break;
+        }
+      }
+
+      function placeFood() {
+        food = {
+          x: Math.floor(Math.random() * tileCount) * gridSize,
+          y: Math.floor(Math.random() * tileCount) * gridSize,
+        };
+        // Ensure food doesn't appear on the snake
+        while (
+          snake.some((segment) => segment.x === food.x && segment.y === food.y)
+        ) {
+          food = {
+            x: Math.floor(Math.random() * tileCount) * gridSize,
+            y: Math.floor(Math.random() * tileCount) * gridSize,
+          };
+        }
+      }
+
+      function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw snake
+        ctx.fillStyle = "green";
+        snake.forEach((segment) => {
+          ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+        });
+        // Draw food
+        ctx.fillStyle = "red";
+        ctx.fillRect(food.x, food.y, gridSize, gridSize);
+      }
+
+      startGame();
+    </script>
+  </body>
+</html>
+
+
+
+
+
